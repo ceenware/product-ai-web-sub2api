@@ -5,7 +5,13 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
 BRANCH="${SUB2API_BRANCH:-ceen}"
 COMPOSE_FILE="${SCRIPT_DIR}/docker-compose.local.yml"
+OVERRIDE_FILE="${SCRIPT_DIR}/docker-compose.override.yml"
 ENV_FILE="${SCRIPT_DIR}/.env"
+COMPOSE_ARGS=(--env-file "${ENV_FILE}" -f "${COMPOSE_FILE}")
+
+if [ -f "${OVERRIDE_FILE}" ]; then
+  COMPOSE_ARGS+=(-f "${OVERRIDE_FILE}")
+fi
 
 cd "${REPO_ROOT}"
 
@@ -21,6 +27,6 @@ git pull --ff-only origin "${BRANCH}"
 export SUB2API_COMMIT
 SUB2API_COMMIT="$(git rev-parse --short HEAD)"
 
-docker compose --env-file "${ENV_FILE}" -f "${COMPOSE_FILE}" build --pull sub2api
-docker compose --env-file "${ENV_FILE}" -f "${COMPOSE_FILE}" up -d --remove-orphans
-docker compose --env-file "${ENV_FILE}" -f "${COMPOSE_FILE}" ps
+docker compose "${COMPOSE_ARGS[@]}" build --pull sub2api
+docker compose "${COMPOSE_ARGS[@]}" up -d --remove-orphans
+docker compose "${COMPOSE_ARGS[@]}" ps
